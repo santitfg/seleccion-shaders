@@ -13,7 +13,7 @@ Para poder visualizarlos abrir el archivo index.htlm desde el navegador.
 ## [FullColor](https://santitfg.github.io/seleccion-shaders/fullcolor/)
 ![fullcolor](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/fullcolor/fullcolor.jpg)
 --------
-## [Impercepciones (serie trituradores)](https://santitfg.github.io/seleccion-shaders/impercepciones/)
+## [Impercepciones (serie trituradores)](https://santitfg.github.io/seleccion-shaders/impercepcion/)
 ![impercepcion](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/impercepcion/impercepcion.jpg)
 --------
 ## [Nucleos](https://santitfg.github.io/seleccion-shaders/nucleos)
