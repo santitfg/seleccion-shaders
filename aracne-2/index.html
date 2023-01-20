@@ -1,0 +1,125 @@
+<body style="margin: 0">
+  <div id="container"></div>
+  <script src="js/three.js"></script>
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    void main() {
+        gl_Position = vec4( position, 1.0 );
+    }
+  </script>
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    //shader realizado en el curso de sol Sarratea computando visiones del caos , derviados desde los ejemplos //https://lashaderwiki.solsarratea.world/cursos/tematicos/computando-visiones-del-caos-en-glsl-por-cceba-media-lab
+
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+    
+    uniform float u_time;
+    uniform vec2 u_resolution;
+    #define PI 3.1415926538
+    
+    float espejo(inout vec2 pos,float angle){
+      vec2 normal=vec2(cos(angle),sin(angle));
+      float d=dot(pos,normal);
+      pos-=normal*min(0.,d)*2.;
+      return smoothstep(.01,0.,abs(d));
+    }
+    
+    vec2 uv(){
+      vec2 pos=gl_FragCoord.xy/u_resolution;
+      //    pos = pos *2.-1.;
+      return pos;
+    }
+    
+    void main(){
+      float div=10.;
+      vec2 pos=uv();vec3 color;
+      float l1;float l2;
+      vec2 ipos=floor(pos*div)/div;
+      ipos=pos;
+      
+      ipos.y+=1.;
+      
+      for(int i=0;i<20;i++){
+        
+        l1+=espejo(pos,PI/5.+ipos.x);
+        l2+=espejo(pos,(PI/3.)+ipos.y);
+        pos.y-=abs(sin(u_time*.01))*10.;
+        pos*=1.276;
+        
+      }
+      color.rgb+=min(l1,l2)*.5;
+      color+=smoothstep(.75,.9,(1.-length(pos)));
+      gl_FragColor=vec4(fract(color),1.);
+      
+    }
+    
+
+    
+  </script>
+  <script>
+    var container;
+    var camera, scene, renderer, clock;
+    var uniforms;
+
+    init();
+    animate();
+
+    function init() {
+      container = document.getElementById("container");
+
+      camera = new THREE.Camera();
+      camera.position.z = 1;
+
+      scene = new THREE.Scene();
+      clock = new THREE.Clock();
+
+      var geometry = new THREE.PlaneBufferGeometry(2, 2);
+      var time = performance.now() * 0.0005;
+
+      uniforms = {
+        u_time: { type: "f", value: time },
+        u_resolution: { type: "v2", value: new THREE.Vector2() },
+        u_mouse: { type: "v2", value: new THREE.Vector2() },
+      };
+
+      var material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: document.getElementById("vertexShader").textContent,
+        fragmentShader: document.getElementById("fragmentShader").textContent,
+      });
+
+      var mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      container.appendChild(renderer.domElement);
+
+      onWindowResize();
+      window.addEventListener("resize", onWindowResize, false);
+
+      document.onmousemove = function (e) {
+        uniforms.u_mouse.value.x = e.pageX;
+        uniforms.u_mouse.value.y = e.pageY;
+      };
+    }
+
+    function onWindowResize(event) {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      uniforms.u_resolution.value.x = renderer.domElement.width;
+      uniforms.u_resolution.value.y = renderer.domElement.height;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      render();
+    }
+
+    function render() {
+      uniforms.u_time.value += clock.getDelta();
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>

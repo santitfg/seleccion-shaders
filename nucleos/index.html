@@ -1,0 +1,197 @@
+<body style="margin: 0">
+  <div id="container"></div>
+  <script src="js/three.js"></script>
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    void main() {
+        gl_Position = vec4( position, 1.0 );
+    }
+  </script>
+<script id="fragmentShader" type="x-shader/x-fragment">
+                    #define PI 3.141592653589793
+                    #define HALF_PI 1.5707963267948966
+
+                    uniform vec2 u_resolution;
+                    uniform vec2 u_mouse;
+                    uniform float u_time;
+                    float circle(in vec2 _st, in float _radius){
+                      vec2 l = _st-vec2(0.5);
+                      return 1.-smoothstep(_radius-(_radius*0.01),
+                                           _radius+(_radius*0.01),
+                                           dot(l,l)*4.0);
+                  }
+                  float box(vec2 _st, vec2 _size, float _smoothEdges){
+                    _size = vec2(0.5)-_size*0.5;
+                    vec2 aa = vec2(_smoothEdges*0.5);
+                    vec2 uv = smoothstep(_size,_size+aa,_st);
+                    uv *= smoothstep(_size,_size+aa,vec2(1.0)-_st);
+                    return uv.x*uv.y;
+                }
+                float metaball(vec2 st){
+                    float distancia = 0.249;
+                        float recorte = 0.12599;
+                float forma=circle((st + vec2(0.0,-distancia)),recorte);
+                     forma+=circle((st+vec2(0.0,distancia)),recorte);
+                  forma+=box(st,vec2(0.280,0.660),0.0)-circle((st+vec2(distancia,0)),recorte)-circle((st+vec2(-distancia,0.)),recorte);
+                    return forma;
+                }
+
+
+            vec2 rotacion (vec2 pos, float cantidad){
+              return  pos * mat2(cos(cantidad),sin(cantidad),-sin(cantidad),cos(cantidad));
+            }
+
+
+
+            vec2 random2(vec2 st){
+              st = vec2( dot(st,vec2(127.1,311.7)),
+                        dot(st,vec2(269.5,183.3)) );
+              return -1.0 + 2.0*fract(sin(st)*43758.5453123);
+            }
+
+            // Gradient Noise by Inigo Quilez - iq/2013
+            // https://www.shadertoy.com/view/XdXGW8
+            float noise2(vec2 st) {
+              vec2 i = floor(st);
+              vec2 f = fract(st);
+
+              vec2 u = f*f*(3.0-2.0*f);
+
+              return mix( mix( dot( random2(i + vec2(0.0,0.0) ), f - vec2(0.0,0.0) ),
+                               dot( random2(i + vec2(1.0,0.0) ), f - vec2(1.0,0.0) ), u.x),
+                          mix( dot( random2(i + vec2(0.0,1.0) ), f - vec2(0.0,1.0) ),
+                               dot( random2(i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y);
+            }
+
+            float espejo(inout vec2 pos, float angle,vec2 desfase){
+              /* Refleja las posciones con respecto al plano orientado por la normal.  */
+              vec2 normal = vec2(cos(angle),sin(angle)+desfase);
+              float d = dot(pos, normal);
+              pos -= normal*min(0.,d)*2.;
+              return smoothstep(0.002,0.001,abs(d));
+            }
+            vec2 espejo( vec2 pos, float angle){
+            vec2 uv=pos;
+              vec2 normal = vec2(cos(angle),sin(angle));
+              float d = dot(pos, normal);
+              uv -= normal*min(0.,d)*2.;
+              return uv;
+            }
+
+                    void main() {
+                      float time = u_time*0.5;
+                      float div=4.0;
+                      //div=gl_FragCoord.x/100.;
+                      float distancia=1.105;
+                      float mixer=1.;
+                      vec2 st = gl_FragCoord.xy/u_resolution.xy;
+                      st.x *= u_resolution.x/u_resolution.y;
+                      vec2 uv=st;
+                      vec2 id=floor(st*div)/div+0.2;
+
+
+                  float  forma =sin(st.x+sin(st.x))*cos(st.y);
+                      vec2 id_time= id+vec2(time*0.5)*id;//podria agregarle random
+                      vec2  d_time=(0.5-random2(id));
+
+                      st+=d_time*noise2(id+u_time)*0.05;
+
+                      float rot_id=mod(id_time.x+id_time.y,2.)*PI;
+                    id_time= id+vec2(time*0.15)*id;
+
+                      st*=div;
+                      st=fract(st);
+                      st-=0.5;
+                      vec2 efecto= st;
+                      efecto+=noise2(st*5.156+id*5.)*0.032;
+                      efecto=espejo(st,noise2(id_time*d_time.x)*20.5);//*d_time.x;
+                      efecto=espejo(st,noise2(id_time*d_time.y)*5.);//*2.*(0.5-noise2(d_time));
+                      float test=0.;
+
+                    st=mix(st,efecto,vec2(mixer));
+                      st*=distancia;
+                      st=rotacion(st,rot_id);
+                      st+=0.5;
+
+                      forma =metaball(st);
+                      vec3 color = fract(vec3(forma));
+
+                     color= vec3(forma);
+
+
+                      color.r*=noise2(st*5.156+(5.264+sin(id*u_time)));
+                      color.g*=noise2(st*5.156+(5.000+sin(id*-u_time)));
+                      color.b*=noise2(st*5.156+(4.656+sin(id*u_time)));
+
+   
+
+                      gl_FragColor = vec4(color,1.0);
+
+                    }
+  </script> 
+  <script>
+    var container;
+    var camera, scene, renderer, clock;
+    var uniforms;
+
+    init();
+    animate();
+
+    function init() {
+      container = document.getElementById("container");
+
+      camera = new THREE.Camera();
+      camera.position.z = 1;
+
+      scene = new THREE.Scene();
+      clock = new THREE.Clock();
+
+      var geometry = new THREE.PlaneBufferGeometry(2, 2);
+      var time = performance.now() * 0.0005;
+
+      uniforms = {
+        u_time: { type: "f", value: time },
+        u_resolution: { type: "v2", value: new THREE.Vector2() },
+        u_mouse: { type: "v2", value: new THREE.Vector2() },
+      };
+
+      var material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: document.getElementById("vertexShader").textContent,
+        fragmentShader: document.getElementById("fragmentShader").textContent,
+      });
+
+      var mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      container.appendChild(renderer.domElement);
+
+      onWindowResize();
+      window.addEventListener("resize", onWindowResize, false);
+
+      document.onmousemove = function (e) {
+        uniforms.u_mouse.value.x = e.pageX;
+        uniforms.u_mouse.value.y = e.pageY;
+      };
+    }
+
+    function onWindowResize(event) {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      uniforms.u_resolution.value.x = renderer.domElement.width;
+      uniforms.u_resolution.value.y = renderer.domElement.height;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      render();
+    }
+
+    function render() {
+      uniforms.u_time.value += clock.getDelta();
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>

@@ -1,0 +1,181 @@
+<body style="margin: 0">
+  <div id="container"></div>
+  <script src="js/three.js"></script>
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    void main() {
+        gl_Position = vec4( position, 1.0 );
+    }
+  </script>
+  <script id="fragmentShader" type="x-shader/x-fragment">
+
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+    #define PI 3.141592653589793
+    #define HALF_PI 1.5707963267948966
+    
+    uniform vec2 u_resolution;
+    uniform vec2 u_mouse;
+    uniform float u_time;
+    
+    // /https://www.shadertoy.com/view/WdKXRV
+    //https://www.shadertoy.com/view/ttXXD8
+    
+    float circle(in vec2 _st, in float _radius){
+        vec2 l = _st*2.-1.;//-vec2(0.5);
+        return 1.-smoothstep(_radius-(_radius*0.01),
+                             _radius+(_radius*0.09),
+                             dot(l,l)*4.0);
+    }
+    
+    
+    vec2 rotacion (vec2 pos, float cantidad){
+        return  pos * mat2(cos(cantidad),sin(cantidad),-sin(cantidad),cos(cantidad));
+    }
+    
+    float random (vec2 st) {
+        return fract(sin(dot(st.xy,
+                             vec2(12.9898,78.233)))*
+            43758.5453123);
+    }
+    
+    float noise (in vec2 st) {
+        vec2 i = floor(st);
+        vec2 f = fract(st);
+    
+        // Four corners in 2D of a tile
+        float a = random(i);
+        float b = random(i + vec2(1.0, 0.0));
+        float c = random(i + vec2(0.0, 1.0));
+        float d = random(i + vec2(1.0, 1.0));
+    
+        // Smooth Interpolation
+    
+        // Cubic Hermine Curve.  Same as SmoothStep()
+        vec2 u = f*f*(3.0-2.0*f);
+        // u = smoothstep(0.,1.,f);
+    
+        // Mix 4 coorners percentages
+        return mix(a, b, u.x) +
+                (c - a)* u.y * (1.0 - u.x) +
+                (d - b) * u.x * u.y;
+    }
+    
+    vec2 random2(vec2 st){
+        st = vec2( dot(st,vec2(127.1,311.7)),
+                  dot(st,vec2(269.5,183.3)) );
+        return -1.0 + 2.0*fract(sin(st)*43758.5453123);
+    }
+    float noise2(vec2 st) {
+        vec2 i = floor(st);
+        vec2 f = fract(st);
+    
+        vec2 u = f*f*(3.0-2.0*f);
+    
+        return mix( mix( dot( random2(i + vec2(0.0,0.0) ), f - vec2(0.0,0.0) ),
+                         dot( random2(i + vec2(1.0,0.0) ), f - vec2(1.0,0.0) ), u.x),
+                    mix( dot( random2(i + vec2(0.0,1.0) ), f - vec2(0.0,1.0) ),
+                         dot( random2(i + vec2(1.0,1.0) ), f - vec2(1.0,1.0) ), u.x), u.y);
+    }
+    
+    
+    void main() {
+        float div=5.0;
+        float distancia=0.249;
+        vec2 st = gl_FragCoord.xy/u_resolution.xy;    
+        //st.x-=0.25;
+      vec2 ipos = floor(st*div); 
+        vec2 id=floor(st*div)/div+0.2;
+        
+ 
+    float  forma =0.0;
+  
+        
+     
+        float diametro=1.216;
+    
+        float diff=0.5;
+        st=st*1.136;
+    for(float i=0.0;i<20.;i++){
+  
+      st+=noise2(st+u_time*0.1+i)*0.188;
+  
+        forma += circle(1.-st,diametro+diff);
+        forma -= circle(1.-st,diametro-diff);
+  
+        forma=1.-forma;
+    
+    }
+        vec3 color = fract(vec3(forma));
+      color= vec3(forma);
+  
+        gl_FragColor = vec4(color,1.0);
+    }
+  </script>
+  <script>
+    var container;
+    var camera, scene, renderer, clock;
+    var uniforms;
+
+    init();
+    animate();
+
+    function init() {
+      container = document.getElementById("container");
+
+      camera = new THREE.Camera();
+      camera.position.z = 1;
+
+      scene = new THREE.Scene();
+      clock = new THREE.Clock();
+
+      var geometry = new THREE.PlaneBufferGeometry(2, 2);
+      var time = performance.now() * 0.0005;
+
+      uniforms = {
+        u_time: { type: "f", value: time },
+        u_resolution: { type: "v2", value: new THREE.Vector2() },
+        u_mouse: { type: "v2", value: new THREE.Vector2() },
+      };
+
+      var material = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: document.getElementById("vertexShader").textContent,
+        fragmentShader: document.getElementById("fragmentShader").textContent,
+      });
+
+      var mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setPixelRatio(window.devicePixelRatio);
+
+      container.appendChild(renderer.domElement);
+
+      onWindowResize();
+      window.addEventListener("resize", onWindowResize, false);
+
+      document.onmousemove = function (e) {
+        uniforms.u_mouse.value.x = e.pageX;
+        uniforms.u_mouse.value.y = e.pageY;
+      };
+    }
+
+    function onWindowResize(event) {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      uniforms.u_resolution.value.x = renderer.domElement.width;
+      uniforms.u_resolution.value.y = renderer.domElement.height;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      render();
+    }
+
+    function render() {
+      uniforms.u_time.value += clock.getDelta();
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
