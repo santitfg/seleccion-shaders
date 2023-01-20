@@ -19,9 +19,6 @@ Para poder visualizarlos abrir el archivo index.htlm desde el navegador.
 ## [Nucleos](https://santitfg.github.io/seleccion-shaders/nucleos)
 ![nucleos](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/nucleos/nucleos.jpg)
 --------
-## [Luces](https://santitfg.github.io/seleccion-shaders/luces)
-![luces](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/luces/luces.jpg)
---------
 ## [Ondas](https://santitfg.github.io/seleccion-shaders/ondas)
 ![ondas](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/ondas/ondas.jpg)
 --------
