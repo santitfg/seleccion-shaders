@@ -35,7 +35,7 @@ Para poder visualizarlos abrir el archivo index.htlm desde el navegador.
 ###  shader realizados en el curso de sol Sarratea computando visiones del caos, derviados desde los [el fractal kotch](https://lashaderwiki.solsarratea.world/cursos/tematicos/computando-visiones-del-caos-en-glsl-por-cceba-media-lab/descripcion-sobre-las-clases/clase-1)
 ![aracne](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/aracne/aracne.jpg)
 --------
-## [Aracne 2](https://santitfg.github.io/seleccion-shaders/aractne-2)
+## [Aracne 2](https://santitfg.github.io/seleccion-shaders/aracne-2)
 ###  shader realizados en el curso de sol Sarratea computando visiones del caos, derviados desde los [el fractal kotch](https://lashaderwiki.solsarratea.world/cursos/tematicos/computando-visiones-del-caos-en-glsl-por-cceba-media-lab/descripcion-sobre-las-clases/clase-1)
 ![aracne-2](https://gitlab.com/stfg.prof/seleccion_shaders/-/raw/main/aracne-2/aracne-2.jpg)
 --------
